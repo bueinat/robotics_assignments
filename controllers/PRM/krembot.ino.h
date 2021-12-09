@@ -41,6 +41,7 @@ public:
     void fill_milestones_set(std::map<std::pair<float, float>, CVector2> *milestones,
                              int height, int width, int nmilestones, int **grid);
     void write_grid_with_milestones(std::string filename, int **grid, int height, int width);
+    void write_grid_with_robot_location_and_destination_point(std::string filename, int **grid, int height, int width);
     // from here and on those are methods which were already written
 
     void Init(TConfigurationNode &t_node) override

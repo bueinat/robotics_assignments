@@ -11,6 +11,14 @@ CVector2 origin;
 int height, width;
 CVector2 pos;
 CDegrees degreeX;
+CVector2 dest(-2, -2);
+CVector2 toWalk;
+CDegrees angle;
+double distance;
+bool flag = true;
+SandTimer sandTimer;
+int moving_time = 1000;
+bool is_close = false;
 
 // my initializations
 int NMILESTONES = 20;
@@ -53,12 +61,12 @@ void PRM_controller::setup()
     PRM_controller::fill_milestones_set(&milestones, height, width, NMILESTONES, coarseGrid);
     PRM_controller::write_grid_with_milestones("grid_with_ml.txt", coarseGrid, height, width);
 
-    // this is a test: iterate over all milestones and determine whether there's a path between them
-    std::map<std::pair<float, float>, CVector2>::iterator it_in;
-    std::map<std::pair<float, float>, CVector2>::iterator it_out;
-    for (it_out = milestones.begin(); it_out != milestones.end(); it_out++)
-        for (it_in = milestones.begin(); it_in != milestones.end(); it_in++)
-            std::cout << it_out->second << ", " << it_in->second << ": " << is_path_clear(it_out->second, it_in->second, coarseGrid) << std::endl;
+    // // this is a test: iterate over all milestones and determine whether there's a path between them
+    // std::map<std::pair<float, float>, CVector2>::iterator it_in;
+    // std::map<std::pair<float, float>, CVector2>::iterator it_out;
+    // for (it_out = milestones.begin(); it_out != milestones.end(); it_out++)
+    //     for (it_in = milestones.begin(); it_in != milestones.end(); it_in++)
+    //         std::cout << it_out->second << ", " << it_in->second << ": " << is_path_clear(it_out->second, it_in->second, coarseGrid) << std::endl;
 
     std::cout << "setup done! set size: " << milestones.size() << std::endl;
 }
@@ -69,6 +77,70 @@ void PRM_controller::loop()
 
     pos = posMsg.pos;
     degreeX = posMsg.degreeX;
+    std::cout << "the robot is at " << pos;
+    if (flag) {
+        PRM_controller::write_grid_with_robot_location_and_destination_point("grid_with_st.txt", occupancyGrid, height, width);
+        flag = false;
+    }
+    // find the vector to walk on
+    toWalk = dest - pos;
+    // rotate to the right angle
+    angle = ToDegrees(toWalk.Angle());
+    distance = toWalk.Length();
+    // act based on the current state
+    switch (state)
+    {
+    case State::turn:
+    {
+        
+        angle = ToDegrees(toWalk.Angle());
+        CDegrees angleDiff = NormalizedDifference(degreeX, angle);
+        std::cout << " with state turn, angle diff" << angleDiff.GetValue() << std::endl;
+        if (angleDiff.GetAbsoluteValue() > 1) {
+            int turning_orientation = - angleDiff.GetAbsoluteValue() / angleDiff.GetValue();
+            double turning_speed = angleDiff.GetAbsoluteValue() * 200 / 180.;
+                krembot.Base.drive(0, turning_orientation * std::min(turning_speed, 100.));
+        } else {
+            state = State::move;
+            sandTimer.start(moving_time);
+            krembot.Led.write(0, 255, 0);
+        }
+        break;
+    }
+
+    case State::move:
+    {
+        std::cout << " with state move, distance " << distance << std::endl;
+        if (sandTimer.finished())
+        {
+            // if time is up, change state to move and set the distance for the following step
+            state = State::turn;
+            krembot.Led.write(255, 0, 0);
+        }
+        else
+        {
+            if (is_close) {
+                if (distance < 0.01) {
+                    krembot.Base.stop();
+                    std::cout << "finished" << std::endl;
+                } else {
+                    krembot.Base.drive(10, 0);
+                }
+            }
+            if (distance > 0.5)
+                krembot.Base.drive(100, 0);
+            else if (distance > 0.1)
+                krembot.Base.drive(50, 0);
+            else {
+                std::cout << "close!" << std::endl;
+                is_close = true;
+                PRM_controller::write_grid_with_robot_location_and_destination_point("grid_with_st.txt", occupancyGrid, height, width);
+                krembot.Led.write(0, 0, 255);
+            }
+        }
+        break;
+    }
+    }
 }
 
 void PRM_controller::write_grid(std::string filename, int **grid, int height, int width)
@@ -114,6 +186,36 @@ void PRM_controller::write_grid_with_milestones(std::string filename, int **grid
                     break;
                 }
             }
+            fid << symbol;
+        }
+        fid << std::endl;
+    }
+
+    fid.close();
+}
+
+void PRM_controller::write_grid_with_robot_location_and_destination_point(std::string filename, int **grid, int height, int width)
+{
+    // open file
+    std::ofstream fid;
+    fid.open(filename, std::ios_base::trunc);
+    int symbol;
+
+    // write data to file
+    for (int col = 0; col < width; col++)
+    {
+        for (int row = height - 1; row >= 0; row--)
+        {
+            // symbol from grid
+            symbol = grid[col][row];
+            int pCol = (pos.GetX() - origin.GetX()) / resolution;
+            int pRow = (pos.GetY() - origin.GetY()) / resolution;
+            if ((col == pCol) && (row == pRow))
+                symbol = 2;
+            pCol = (dest.GetX() - origin.GetX()) / resolution;
+            pRow = (dest.GetY() - origin.GetY()) / resolution;
+            if ((col == pCol) && (row == pRow))
+                symbol = 3;
             fid << symbol;
         }
         fid << std::endl;

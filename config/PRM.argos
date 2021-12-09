@@ -96,7 +96,7 @@
   <!-- ****************** -->
   <!-- * Visualization * -->
   <!-- ****************** -->
-  <!-- <visualization>
+  <visualization>
     <qt-opengl  autoplay="false">
       <user_functions library="build/loop_functions/pos_and_map_loop_functions/libpos_and_map_loop_functions"
                             label="pos_and_map_trajectory_qtuser_functions" />
@@ -110,6 +110,6 @@
         </placements>
       </camera>
     </qt-opengl>
-  </visualization> -->
+  </visualization>
 
 </argos-configuration>

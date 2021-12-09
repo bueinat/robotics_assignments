@@ -1,6 +1,7 @@
 build/*
-grid.txt
+grid*.txt
 coarse_grid.txt
 controllers/PRM/grid_with_ml.txt
 **walkingOnGrid
 config/walkingOnGrid.argos
+.vscode
