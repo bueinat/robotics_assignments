@@ -42,6 +42,7 @@ public:
                              int height, int width, int nmilestones, int **grid);
     void write_grid_with_milestones(std::string filename, int **grid, int height, int width);
     void write_grid_with_robot_location_and_destination_point(std::string filename, int **grid, int height, int width);
+    void walk_to_point(CVector2 source, CVector2 destination);
     // from here and on those are methods which were already written
 
     void Init(TConfigurationNode &t_node) override

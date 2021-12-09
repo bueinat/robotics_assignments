@@ -1,6 +1,7 @@
 #include "krembot.ino.h"
 #include <cstdio>
 #include <fstream>
+#include "BFS.h"
 
 // given initializations
 int col, row;
@@ -14,7 +15,7 @@ CDegrees degreeX;
 CVector2 dest(-2, -2);
 CVector2 toWalk;
 CDegrees angle;
-double distance;
+double distance_left;
 bool flag = true;
 SandTimer sandTimer;
 int moving_time = 1000;
@@ -69,6 +70,7 @@ void PRM_controller::setup()
     //         std::cout << it_out->second << ", " << it_in->second << ": " << is_path_clear(it_out->second, it_in->second, coarseGrid) << std::endl;
 
     std::cout << "setup done! set size: " << milestones.size() << std::endl;
+    // Graph::run_check();
 }
 
 void PRM_controller::loop()
@@ -78,60 +80,74 @@ void PRM_controller::loop()
     pos = posMsg.pos;
     degreeX = posMsg.degreeX;
     std::cout << "the robot is at " << pos;
-    if (flag) {
-        PRM_controller::write_grid_with_robot_location_and_destination_point("grid_with_st.txt", occupancyGrid, height, width);
+    // in the first iteration, print out the robot's location on the map
+    if (flag)
+    {
+        PRM_controller::write_grid_with_robot_location_and_destination_point("grid_with_st_init.txt", occupancyGrid, height, width);
         flag = false;
     }
     // find the vector to walk on
+    // and extract the length and the angle of it.
     toWalk = dest - pos;
-    // rotate to the right angle
     angle = ToDegrees(toWalk.Angle());
-    distance = toWalk.Length();
+    CDegrees angleDiff = NormalizedDifference(degreeX, angle);
+    distance_left = toWalk.Length();
     // act based on the current state
     switch (state)
     {
     case State::turn:
-    {
-        
-        angle = ToDegrees(toWalk.Angle());
-        CDegrees angleDiff = NormalizedDifference(degreeX, angle);
+    {   
         std::cout << " with state turn, angle diff" << angleDiff.GetValue() << std::endl;
-        if (angleDiff.GetAbsoluteValue() > 1) {
-            int turning_orientation = - angleDiff.GetAbsoluteValue() / angleDiff.GetValue();
+        int turning_orientation = - angleDiff.GetAbsoluteValue() / angleDiff.GetValue();
+        // if you got more than 1 degree, turn towards your destination
+        if (angleDiff.GetAbsoluteValue() > 100)
+            krembot.Base.drive(0, turning_orientation * 100);
+        else if (angleDiff.GetAbsoluteValue() > 1)
+        {
             double turning_speed = angleDiff.GetAbsoluteValue() * 200 / 180.;
-                krembot.Base.drive(0, turning_orientation * std::min(turning_speed, 100.));
-        } else {
+            krembot.Base.drive(0, turning_orientation * std::min(turning_speed, 100.));
+        }
+        // else, change mode to move
+        else
+        {
             state = State::move;
             sandTimer.start(moving_time);
             krembot.Led.write(0, 255, 0);
         }
         break;
     }
-
+    // TODO: make it more neat and delete printing out
     case State::move:
     {
-        std::cout << " with state move, distance " << distance << std::endl;
+        std::cout << " with state move, distance " << distance_left << std::endl;
+        // if time is up, change state to turn and set the distance for the following step
         if (sandTimer.finished())
-        {
-            // if time is up, change state to move and set the distance for the following step
+        {    
             state = State::turn;
             krembot.Led.write(255, 0, 0);
         }
         else
         {
-            if (is_close) {
-                if (distance < 0.01) {
+            // if you're close to the target, either say you've arrived or drive much slower
+            if (is_close)
+            {
+                if (distance_left < 0.01)
+                {
                     krembot.Base.stop();
                     std::cout << "finished" << std::endl;
-                } else {
+                }
+                else
+                {
                     krembot.Base.drive(10, 0);
                 }
             }
-            if (distance > 0.5)
+            // in case you're not close, drive in changing speeds according to your distance
+            else if (distance_left > 0.5)
                 krembot.Base.drive(100, 0);
-            else if (distance > 0.1)
+            else if (distance_left > 0.1)
                 krembot.Base.drive(50, 0);
-            else {
+            else
+            {
                 std::cout << "close!" << std::endl;
                 is_close = true;
                 PRM_controller::write_grid_with_robot_location_and_destination_point("grid_with_st.txt", occupancyGrid, height, width);
@@ -271,8 +287,8 @@ void PRM_controller::fill_milestones_set(std::map<std::pair<float, float>, CVect
     std::pair<float, float> new_key;
     while (milestones->size() < nmilestones) // fill map until it has nmilestones elements
     {
-        generate_random_point(width, height, grid, new_key);    // fill the key with a new value
-        if (milestones->find(new_key) == milestones->end())     // if the key doesn't exist already, insert it into the map
+        generate_random_point(width, height, grid, new_key); // fill the key with a new value
+        if (milestones->find(new_key) == milestones->end())  // if the key doesn't exist already, insert it into the map
             milestones->insert(make_pair(new_key, CVector2(new_key.first, new_key.second)));
     }
 }
@@ -281,13 +297,13 @@ void PRM_controller::generate_random_point(int width, int height, int **grid, st
 {
     float x = random_float(width * resolution);
     float y = random_float(height * resolution);
-    while (is_point_occupied(x, y, grid) == 1)  // if (x, y) is occupied in the grid, generate new point
+    while (is_point_occupied(x, y, grid) == 1) // if (x, y) is occupied in the grid, generate new point
     {
         x = random_float(width * resolution);
         y = random_float(height * resolution);
     }
 
-   //  fill the passed pair with the (x, y) values
+    //  fill the passed pair with the (x, y) values
     oPair.first = x;
     oPair.second = y;
 }
@@ -328,12 +344,14 @@ bool PRM_controller::is_path_clear(CVector2 startpoint, CVector2 endpoint, int *
 
     // if the start point and the end point are adjacent, check if they're both free
     // and return accordingly
-    if (((start_x + 1 == end_x) || (start_x - 1 == end_x)) && (start_y == end_y)) {
+    if (((start_x + 1 == end_x) || (start_x - 1 == end_x)) && (start_y == end_y))
+    {
         if ((grid[start_x][start_y] == 0 && (grid[end_x][end_y] == 0)))
             return true;
         return false;
     }
-    if ((start_x == end_x) && ((start_y + 1 == end_y) || (start_y - 1 == end_y))) {
+    if ((start_x == end_x) && ((start_y + 1 == end_y) || (start_y - 1 == end_y)))
+    {
         if ((grid[start_x][start_y] == 0 && (grid[end_x][end_y] == 0)))
             return true;
         return false;

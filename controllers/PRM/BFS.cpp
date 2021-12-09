@@ -54,7 +54,7 @@ void Graph::BFS(int s)
 }
  
 // Driver program to test methods of graph class
-int run_check()
+int Graph::run_check()
 {
     // Create a graph given in the above diagram
     Graph g(4);

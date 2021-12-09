@@ -19,4 +19,6 @@ public:
  
     // prints BFS traversal from a given source s
     void BFS(int s); 
+
+    static int run_check();
 };
