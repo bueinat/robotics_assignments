@@ -12,7 +12,8 @@ add_definitions(
 set(SRC_FILES
         krembot.ino.cpp
         # TODO: list here additional cpp files
-        BFS.cpp
+        Graph.cpp
+        Kdtree.cpp
         )
 
 add_library(${PROGRAM_NAME} MODULE ${SRC_FILES})

@@ -5,7 +5,7 @@
 #include "Graph.h"
 #include "Kdtree.h"
 // #include "main.h"
-#include "krembot.ino.h"
+// #include "krembot.ino.h"
 
 void print_nodes(const KdNodeVector &nodes) {
     size_t i,j;
