@@ -1,8 +1,4 @@
 //
-// Created by linor on 09/12/2021.
-//
-
-//
 // Kd-Tree implementation.
 //
 // Copyright: Christoph Dalitz, 2018-2020
@@ -10,6 +6,8 @@
 // License:   BSD style license
 //            (see the file LICENSE for details)
 //
+// the code is taken from here: https://github.com/cdalitz/kdtree-cpp
+
 
 #include <cstdlib>
 #include <queue>

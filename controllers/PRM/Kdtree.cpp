@@ -1,9 +1,4 @@
-//
-// Created by linor on 11/12/2021.
-//
-//
-// Created by linor on 09/12/2021.
-//
+// the code is taken from here: https://github.com/cdalitz/kdtree-cpp
 
 #include "Kdtree.h"
 

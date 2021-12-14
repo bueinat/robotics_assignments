@@ -2,6 +2,8 @@
 #include <queue>
 #include <map>
 #include <tuple>
+#include "Graph.h"
+#include "Kdtree.h"
 
 struct MapMsg
 {
@@ -38,11 +40,15 @@ public:
     void write_grid(std::string filename, int **grid, int height, int width);
     void thickening_grid(int **origGrid, int **newGrid, int height, int width, Real resolution);
     void generate_random_point(int width, int height, int **grid, std::pair<float, float> &oPair);
-    void fill_milestones_set(std::map<std::pair<float, float>, CVector2> *milestones,
+    void fill_milestones_set(std::map<std::pair<float, float>, CVector2> *milestones, KdNodeVector *nodes, std::vector<std::vector<float>> *points,
                              int height, int width, int nmilestones, int **grid);
     void write_grid_with_milestones(std::string filename, int **grid, int height, int width);
     void write_grid_with_robot_location_and_destination_point(std::string filename, int **grid, int height, int width);
     void walk_to_point(CVector2 source, CVector2 destination);
+    void print_float_vector(std::vector<float> const &vec);
+    void print_nodes(const KdNodeVector &nodes);
+    int source(std::map<int,std::vector<float>> new_keys_map,std::vector<std::vector<float>>points, int l);
+    int destination(std::map<int,std::vector<float>> new_keys_map, KdNodeVector result,int b);
     // from here and on those are methods which were already written
 
     void Init(TConfigurationNode &t_node) override

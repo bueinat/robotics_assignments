@@ -1,9 +1,9 @@
 #include "krembot.ino.h"
 #include <cstdio>
 #include <fstream>
-// #include "BFS.h"
 
 // given initializations
+// TODO: remove some of the unneeded or maybe put them in the loop
 int col, row;
 int **occupancyGrid;
 int **coarseGrid;
@@ -25,12 +25,23 @@ bool is_close = false;
 int NMILESTONES = 20;
 Real coarseResolution;
 std::map<std::pair<float, float>, CVector2> milestones;
+map<int, vector<float>> int_to_nodes_map;
+map<int, vector<float>> nodes_to_int_map;
 
 enum State
 {
     move,
     turn
 } state;
+
+int find_key_by_value(std::map<int, CoordPoint> map, CoordPoint value)
+{
+    int key = 0;
+    for (auto &i : map)
+        if (i.second == value)
+            return i.first;
+    return -1;
+}
 
 void PRM_controller::setup()
 {
@@ -45,7 +56,7 @@ void PRM_controller::setup()
     width = mapMsg.width;
 
     // relative resolution indicates the number of cells which come into one in the coarse grid
-    int relativeResolution = (int)(robotSize / resolution);
+    int relativeResolution = (int)(robotSize / 4 / resolution);
 
     // create coarse grid array and fill it with grid values
     coarseGrid = new int *[height]; // row = height
@@ -59,16 +70,36 @@ void PRM_controller::setup()
     PRM_controller::write_grid("coarse_grid.txt", coarseGrid, height, width);
 
     // fill milestones with points, and write to file
-    PRM_controller::fill_milestones_set(&milestones, height, width, NMILESTONES, coarseGrid);
+    KdNodeVector nodes;
+    std::vector<std::vector<float>> points(2);
+    PRM_controller::fill_milestones_set(&milestones, &nodes, &points, height, width, NMILESTONES, coarseGrid);
     PRM_controller::write_grid_with_milestones("grid_with_ml.txt", coarseGrid, height, width);
 
-    // // this is a test: iterate over all milestones and determine whether there's a path between them
-    // std::map<std::pair<float, float>, CVector2>::iterator it_in;
-    // std::map<std::pair<float, float>, CVector2>::iterator it_out;
-    // for (it_out = milestones.begin(); it_out != milestones.end(); it_out++)
-    //     for (it_in = milestones.begin(); it_in != milestones.end(); it_in++)
-    //         std::cout << it_out->second << ", " << it_in->second << ": " << is_path_clear(it_out->second, it_in->second, coarseGrid) << std::endl;
-
+    Graph g(NMILESTONES);
+    KdTree tree(&nodes);
+    cout << "Points in kd-tree:\n  ";
+    print_nodes(tree.allnodes);
+    KdNodeVector result;
+    int k = 5;
+    for (int l = 0; l < NMILESTONES; l++)
+    {
+        tree.k_nearest_neighbors(int_to_nodes_map.at(l), k, &result);
+        for (int b = 0; b < k; b++)
+        {
+            // find the keys matching the edge
+            int d = find_key_by_value(int_to_nodes_map, result.at(b).point);
+            if (d == -1)
+                LOGERR << "reached end" << std::endl;
+            // find out if there's a path
+            CVector2 start = CVector2(int_to_nodes_map.at(l).at(0), int_to_nodes_map.at(l).at(1));
+            CVector2 end = CVector2(result.at(b).point.at(0), result.at(b).point.at(1));
+            if (is_path_clear(start, end, coarseGrid))
+            {
+                g.addEdge(l, d);
+                std::cout << start << " -> " << end << std::endl;
+            }
+        }
+    }
     std::cout << "setup done! set size: " << milestones.size() << std::endl;
     // Graph::run_check();
 }
@@ -96,9 +127,9 @@ void PRM_controller::loop()
     switch (state)
     {
     case State::turn:
-    {   
+    {
         std::cout << " with state turn, angle diff" << angleDiff.GetValue() << std::endl;
-        int turning_orientation = - angleDiff.GetAbsoluteValue() / angleDiff.GetValue();
+        int turning_orientation = -angleDiff.GetAbsoluteValue() / angleDiff.GetValue();
         // if you got more than 1 degree, turn towards your destination
         if (angleDiff.GetAbsoluteValue() > 100)
             krembot.Base.drive(0, turning_orientation * 100);
@@ -122,7 +153,7 @@ void PRM_controller::loop()
         std::cout << " with state move, distance " << distance_left << std::endl;
         // if time is up, change state to turn and set the distance for the following step
         if (sandTimer.finished())
-        {    
+        {
             state = State::turn;
             krembot.Led.write(255, 0, 0);
         }
@@ -281,15 +312,24 @@ static float random_float(float max)
     return static_cast<float>(rand()) / static_cast<float>(RAND_MAX / max);
 }
 
-void PRM_controller::fill_milestones_set(std::map<std::pair<float, float>, CVector2> *milestones,
+void PRM_controller::fill_milestones_set(std::map<std::pair<float, float>, CVector2> *milestones, KdNodeVector *nodes, std::vector<std::vector<float>> *points,
                                          int height, int width, int nmilestones, int **grid)
 {
+    int i = 0;
     std::pair<float, float> new_key;
+    std::vector<float> point(2);
     while (milestones->size() < nmilestones) // fill map until it has nmilestones elements
     {
         generate_random_point(width, height, grid, new_key); // fill the key with a new value
-        if (milestones->find(new_key) == milestones->end())  // if the key doesn't exist already, insert it into the map
+        if (milestones->find(new_key) == milestones->end())
+        { // if the key doesn't exist already, insert it into the map
             milestones->insert(make_pair(new_key, CVector2(new_key.first, new_key.second)));
+            point[0] = new_key.first;
+            point[1] = new_key.second;
+            int_to_nodes_map.insert({i++, point});
+            nodes->push_back(KdNode(point));
+            points->insert(points->end(), point);
+        }
     }
 }
 
@@ -364,4 +404,49 @@ bool PRM_controller::is_path_clear(CVector2 startpoint, CVector2 endpoint, int *
     if (((end_x != mid_x) || (end_y != mid_y)) && (flag == true))
         flag = flag && is_path_clear(midpoint, endpoint, grid);
     return flag;
+}
+
+int PRM_controller::source(map<int, vector<float>> new_keys_map, vector<vector<float>> points, int l)
+{
+    for (auto it = new_keys_map.begin(); it != new_keys_map.end(); ++it)
+    {
+        if (it->second == points[l])
+            return it->first;
+    }
+    return -1;
+}
+int PRM_controller::destination(map<int, vector<float>> new_keys_map, KdNodeVector result, int b)
+{
+    for (auto it = new_keys_map.begin(); it != new_keys_map.end(); ++it)
+    {
+        if (it->second == result[b].point)
+            return it->first;
+    }
+    return -1;
+}
+
+void PRM_controller::print_float_vector(vector<float> const &vec)
+{
+    for (int i = 0; i < vec.size(); i++)
+    {
+        std::cout << vec.at(i) << ' ';
+    }
+}
+void PRM_controller::print_nodes(const KdNodeVector &nodes)
+{
+    size_t i, j;
+    for (i = 0; i < nodes.size(); ++i)
+    {
+        if (i > 0)
+            cout << " ";
+        cout << "(";
+        for (j = 0; j < nodes[i].point.size(); j++)
+        {
+            if (j > 0)
+                cout << ",";
+            cout << nodes[i].point[j];
+        }
+        cout << ")";
+    }
+    cout << endl;
 }
