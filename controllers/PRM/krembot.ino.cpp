@@ -1,8 +1,16 @@
 #include "krembot.ino.h"
 #include <cstdio>
 #include <fstream>
-// given initializations
-// TODO: remove some of the unneeded or maybe put them in the loop
+
+// constants initialization
+const int NMILESTONES = 100;
+const int K = 5;
+int moving_time = 1000;
+
+// flags
+bool is_close = false;
+bool flag = true;
+
 int col, row;
 int **occupancyGrid;
 int **coarseGrid;
@@ -11,21 +19,17 @@ CVector2 origin;
 int height, width;
 CVector2 pos;
 CDegrees degreeX;
+
 CVector2 dest(-2, -2);
 CVector2 next_ml;
 int next_ml_index = 1;
 CVector2 toWalk;
 CDegrees angle;
 double distance_left;
-bool flag = true;
 SandTimer sandTimer;
-int moving_time = 1000;
-const int k = 5;
-bool is_close = false;
-
-// my initializations
-int NMILESTONES = 100;
 Real coarseResolution;
+
+// data structures
 std::map<std::pair<float, float>, CVector2> milestones;
 map<int, vector<float>> int_to_nodes_map;
 map<int, vector<float>> nodes_to_int_map;
@@ -61,7 +65,7 @@ void PRM_controller::setup()
     width = mapMsg.width;
 
     // relative resolution indicates the number of cells which come into one in the coarse grid
-    int relativeResolution = (int)(robotSize / resolution);
+    int relativeResolution = (int)(robotSize / resolution / 4);     // TODO: divide by 4
 
     // create coarse grid array and fill it with grid values
     coarseGrid = new int *[height]; // row = height
@@ -76,47 +80,54 @@ void PRM_controller::setup()
 
     // fill milestones with points, and write to file
     KdNodeVector nodes;
-    std::vector<std::vector<float>> points(2);
+    std::vector<std::vector<float>> points;
     PRM_controller::fill_milestones_set(&milestones, &nodes, &points, height, width, NMILESTONES, coarseGrid);
     PRM_controller::write_grid_with_milestones("/home/einat/grid_with_ml.txt", coarseGrid, height, width);
+    
+    for (auto &a : points) {
+        std::cout << a[0] << ", " << a[1] << std::endl;
+    }
 
     // create graph with all points, edges are determined by knn
     Graph graph(NMILESTONES + 2);
     KdTree tree(&nodes);
-    fill_graph(&tree, &graph, k);
+    fill_graph(&tree, &graph, K);
 
     // insert start and end points to the tree
     // TODO: if one of those points is taken, print there's no path and return
-    float sx = 1 - origin.GetX();
-    float sy = 1 - origin.GetY();
-    float tx = -2 - origin.GetX();
-    float ty = -2 - origin.GetY();
-    KdNode start_node(std::vector<float>({sx, sy}));
-    KdNode end_node(std::vector<float>({tx, ty}));
+    // float sx = 1 - origin.GetX();
+    // float sy = 1 - origin.GetY();
+    // float tx = -2 - origin.GetX();
+    // float ty = -2 - origin.GetY();
+    // KdNode start_node(std::vector<float>({sx, sy}));
+    // KdNode end_node(std::vector<float>({tx, ty}));
+    KdNode start_node(std::vector<float>({1, 1}));
+    KdNode end_node(std::vector<float>({-2, -2}));
     int_to_nodes_map.insert({NMILESTONES, start_node.point});
     int_to_nodes_map.insert({NMILESTONES + 1, end_node.point});
     nodes.push_back(start_node); // starting point
     nodes.push_back(end_node);   // ending point
     KdTree tree_with_st(&nodes);
-    insert_point_to_graph(start_node.point, &tree_with_st, &graph, k, NMILESTONES);
-    insert_point_to_graph(end_node.point, &tree_with_st, &graph, k, NMILESTONES + 1);
+    insert_point_to_graph(start_node.point, &tree_with_st, &graph, K, NMILESTONES);
+    insert_point_to_graph(end_node.point, &tree_with_st, &graph, K, NMILESTONES + 1);
 
     // find the path using BFS
+    // the function I use gives the path in reverse order
+    // so I switch the source and destination
     auto vec = graph.shortest_path_with_BFS(NMILESTONES + 1, NMILESTONES);
 
     // path in int to points
     for (int i = 0; i < vec.size(); i++)
     {
         CoordPoint p = int_to_nodes_map.at(vec[i]);
-        path.push_back({p.at(0) + origin.GetX(), p.at(1) + origin.GetY()});
-        std::cout << "(" << p.at(0) + origin.GetX() << ", " << p.at(1) + origin.GetY() << ")" << std::endl;
+        path.push_back({p.at(0), p.at(1)});
+        std::cout << "(" << p.at(0) << ", " << p.at(1) << ")" << std::endl;
     }
 
     // set first pair of points in the path
     next_ml = path.at(next_ml_index++);
     LOGERR << "first point: " << next_ml << std::endl;
     std::cout << "setup done! set size: " << milestones.size() << std::endl;
-    // Graph::run_check();
 }
 
 void PRM_controller::insert_point_to_graph(CoordPoint point, KdTree *tree, Graph *g, int k, int g_index)
@@ -135,7 +146,7 @@ void PRM_controller::insert_point_to_graph(CoordPoint point, KdTree *tree, Graph
         // find out if there's a path
         CVector2 start = CVector2(point.at(0), point.at(1));
         CVector2 end = CVector2(result.at(b).point.at(0), result.at(b).point.at(1));
-        if (is_path_clear(start, end, coarseGrid))
+        if (is_path_clear(start, end, coarseGrid, true))
         {
             g->addEdge(g_index, d);
             std::cout << start << " -> " << end << std::endl;
@@ -158,7 +169,7 @@ void PRM_controller::fill_graph(KdTree *tree, Graph *g, int k)
             // find out if there's a path
             CVector2 start = CVector2(int_to_nodes_map.at(l).at(0), int_to_nodes_map.at(l).at(1));
             CVector2 end = CVector2(result.at(b).point.at(0), result.at(b).point.at(1));
-            if (is_path_clear(start, end, coarseGrid))
+            if (is_path_clear(start, end, coarseGrid, true))
             {
                 g->addEdge(l, d);
                 std::cout << start << " -> " << end << std::endl;
@@ -173,7 +184,12 @@ void PRM_controller::loop()
 
     pos = posMsg.pos;
     degreeX = posMsg.degreeX;
-    std::cout << "the robot is at " << pos;
+    float y_in_grid = (pos.GetX() - origin.GetX()) / resolution;
+    float x_in_grid = (pos.GetY() - origin.GetY()) / resolution;
+    if (coarseGrid[(int)x_in_grid][(int)y_in_grid] == 1)
+        LOGERR << "current point " << pos << "is occupied" << std::endl;
+
+    std::cout << "the robot is at " << pos << std::endl;
     // in the first iteration, print out the robot's location on the map
     if (flag)
     {
@@ -307,8 +323,8 @@ void PRM_controller::write_grid_with_milestones(std::string filename, int **grid
             std::map<std::pair<float, float>, CVector2>::iterator it;
             for (it = milestones.begin(); it != milestones.end(); it++)
             {
-                int pCol = it->first.first / resolution;
-                int pRow = it->first.second / resolution;
+                int pCol = (it->first.first - origin.GetX()) / resolution;
+                int pRow = (it->first.second - origin.GetY()) / resolution;
                 if ((col == pCol) && (row == pRow))
                 {
                     symbol = 2;
@@ -388,10 +404,11 @@ void PRM_controller::thickening_grid(int **origGrid, int **newGrid, int height, 
     }
 }
 
-// generate random float in range [0-max]
-static float random_float(float max)
+// generate random float in range [min, max]
+// taken from here: https://stackoverflow.com/questions/686353/random-float-number-generation
+static float random_float(float min, float max)
 {
-    return static_cast<float>(rand()) / static_cast<float>(RAND_MAX / max);
+    return min + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(max-min)));
 }
 
 void PRM_controller::fill_milestones_set(std::map<std::pair<float, float>, CVector2> *milestones, KdNodeVector *nodes, std::vector<std::vector<float>> *points,
@@ -410,19 +427,21 @@ void PRM_controller::fill_milestones_set(std::map<std::pair<float, float>, CVect
             point[1] = new_key.second;
             int_to_nodes_map.insert({i++, point});
             nodes->push_back(KdNode(point));
-            points->insert(points->end(), point);
+            points->push_back(point);
         }
     }
 }
 
 void PRM_controller::generate_random_point(int width, int height, int **grid, std::pair<float, float> &oPair)
 {
-    float x = random_float(width * resolution);
-    float y = random_float(height * resolution);
+    float xmin = origin.GetX();
+    float xmax = width * resolution + origin.GetX();
+    float x = random_float(xmin, xmax);
+    float y = random_float(origin.GetY(), height * resolution + origin.GetY());
     while (is_point_occupied(x, y, grid) == 1) // if (x, y) is occupied in the grid, generate new point
     {
-        x = random_float(width * resolution);
-        y = random_float(height * resolution);
+        x = random_float(origin.GetX(), width * resolution + origin.GetX());
+        y = random_float(origin.GetY(), height * resolution + origin.GetY());
     }
 
     //  fill the passed pair with the (x, y) values
@@ -433,12 +452,12 @@ void PRM_controller::generate_random_point(int width, int height, int **grid, st
 int PRM_controller::is_point_occupied(float x, float y, int **grid)
 {
     // transform (x, y) coordinates into grid cell
-    float x_in_grid = x / resolution;
-    float y_in_grid = y / resolution;
+    float y_in_grid = (x - origin.GetX()) / resolution;
+    float x_in_grid = (y - origin.GetY()) / resolution;
     return grid[(int)x_in_grid][(int)y_in_grid];
 }
 
-bool PRM_controller::is_path_clear(CVector2 startpoint, CVector2 endpoint, int **grid)
+bool PRM_controller::is_path_clear(CVector2 startpoint, CVector2 endpoint, int **grid, bool add_origin)
 {
     // if the points are really close, they're basically the same point
     // TODO: this is not accuate, maybe I should fix it
@@ -453,12 +472,12 @@ bool PRM_controller::is_path_clear(CVector2 startpoint, CVector2 endpoint, int *
 
     bool flag = true;
     // transform each point into a grid cell
-    int start_x = startpoint.GetX() / resolution;
-    int start_y = startpoint.GetY() / resolution;
-    int mid_x = midpoint.GetX() / resolution;
-    int mid_y = midpoint.GetY() / resolution;
-    int end_x = endpoint.GetX() / resolution;
-    int end_y = endpoint.GetY() / resolution;
+    int start_x = (startpoint.GetX() - origin.GetX()) / resolution;
+    int start_y = (startpoint.GetY() - origin.GetY()) / resolution;
+    int mid_x = (midpoint.GetX() - origin.GetX()) / resolution;
+    int mid_y = (midpoint.GetY() - origin.GetY()) / resolution;
+    int end_x = (endpoint.GetX() - origin.GetX()) / resolution;
+    int end_y = (endpoint.GetY() - origin.GetY()) / resolution;
 
     // if the start point cell and the end point cell are identical, a path exists
     if ((start_x == end_x) && (start_y == end_y))
@@ -486,9 +505,9 @@ bool PRM_controller::is_path_clear(CVector2 startpoint, CVector2 endpoint, int *
     // If you got so far, run the same function on (start, mid) and (mid, end)
     // assuming none of them are identical
     if (((start_x != mid_x) || (start_y != mid_y)) && (flag == true))
-        flag = flag && is_path_clear(startpoint, midpoint, grid);
+        flag = flag && is_path_clear(startpoint, midpoint, grid, add_origin);
     if (((end_x != mid_x) || (end_y != mid_y)) && (flag == true))
-        flag = flag && is_path_clear(midpoint, endpoint, grid);
+        flag = flag && is_path_clear(midpoint, endpoint, grid, add_origin);
     return flag;
 }
 

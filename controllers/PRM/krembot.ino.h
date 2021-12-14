@@ -38,7 +38,7 @@ public:
 
     // I added the following methods:
     int is_point_occupied(float x, float y, int **grid);
-    bool is_path_clear(CVector2 x, CVector2 y, int **grid);
+    bool is_path_clear(CVector2 x, CVector2 y, int **grid, bool add_origin);
     void write_grid(std::string filename, int **grid, int height, int width);
     void thickening_grid(int **origGrid, int **newGrid, int height, int width, Real resolution);
     void generate_random_point(int width, int height, int **grid, std::pair<float, float> &oPair);
