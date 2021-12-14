@@ -1,13 +1,8 @@
-//
-// Created by linor on 11/12/2021.
-//
-
 #include "Graph.h"
-#include "Kdtree.h"
-// #include "main.h"
-// #include "krembot.ino.h"
+#include <bits/stdc++.h>
+using namespace std;
 
-void print_nodes(const KdNodeVector &nodes) {
+void Graph::print_nodes(const KdNodeVector &nodes) {
     size_t i,j;
     for (i = 0; i < nodes.size(); ++i) {
         if (i > 0)
@@ -23,7 +18,7 @@ void print_nodes(const KdNodeVector &nodes) {
     cout << endl;
 }
 
-void print_float_vector(vector<float> const &vec){
+void Graph::print_float_vector(vector<float> const &vec) {
     for (int i = 0; i < vec.size(); i++) {
         std::cout << vec.at(i) << ' ';
     }
@@ -38,53 +33,92 @@ Graph::Graph(int V)
 void Graph::addEdge(int v, int w)
 {
     adj[v].push_back(w); // Add w to v’s list.
+    adj[w].push_back(v);
 }
-// todo to add a destination node
-void Graph::BFS(map<int, vector<float>> mymap, int s,int d)
-{
-    //vector<KdNode> bfsPoints;
-    KdNodeVector bfsPoints;
-    // Mark all the vertices as not visited
-    bool *visited = new bool[V];
-    for(int i = 0; i < V; i++)
-        visited[i] = false;
 
-    // Create a queue for BFS
+// utility function to form edge between two vertices
+// source and dest
+void add_edge(vector<int> adj[], int src, int dest)
+{
+	adj[src].push_back(dest);
+	adj[dest].push_back(src);
+}
+
+// a modified version of BFS that stores predecessor
+// of each vertex in array p
+// and its distance from source in array d
+// this code was taken from here: https://www.geeksforgeeks.org/shortest-path-unweighted-graph/
+bool Graph::BFS(int src, int dest, int v, int pred[], int dist[])
+{
     list<int> queue;
-    // Mark the current node as visited and enqueue it
-    visited[s] = true;
-    queue.push_back(s);
-    // 'i' will be used to get all adjacent
-    // vertices of a vertex
-    list<int>::iterator i;
-    //cout << mymap.size() << endl;
-    for(map<int,std::vector<float>>::const_iterator it = mymap.begin();
-        it != mymap.end(); ++it)
-    {
-        std::cout << it->first << "\n";
-        // print_float_vector(it->second);
-        cout << endl;
-    }
-    while(!queue.empty())
-    {
-        // Dequeue a vertex from queue and print it
-        s = queue.front();
-        //print_float_vector(new_keys_map[s]);
-        cout << s << endl;
-        bfsPoints.emplace_back(mymap[s]);
-        queue.pop_front();
-        // Get all adjacent vertices of the dequeued
-        // vertex s. If a adjacent has not been visited,
-        // then mark it visited and enqueue it
-        for (i = adj[s].begin(); i != adj[s].end(); ++i)
+	bool visited[v];
+	for (int i = 0; i < v; i++) {
+		visited[i] = false;
+		dist[i] = INT_MAX;
+		pred[i] = -1;
+	}
+
+	visited[src] = true;
+	dist[src] = 0;
+	queue.push_back(src);
+
+	// standard BFS algorithm
+	while (!queue.empty()) {
+		int u = queue.front();
+		queue.pop_front();
+
+        list<int>::iterator i;
+        for (i = this->adj[u].begin(); i != this->adj[u].end(); ++i)
         {
             if (!visited[*i])
             {
                 visited[*i] = true;
+                dist[*i] = dist[u] + 1;
+				pred[*i] = u;
                 queue.push_back(*i);
+
+                // We stop BFS when we find destination.
+				if (*i == dest)
+					return true;
             }
         }
-    }
-    //print the points of
-    // print_nodes(bfsPoints);
+	}
+
+	return false;
+}
+
+// utility function to print the shortest distance
+// between source vertex and destination vertex
+vector<int> Graph::shortest_path_with_BFS(int s, int dest)
+{
+	// predecessor[i] array stores predecessor of
+	// i and distance array stores distance of i from s
+    int v = this->V;
+	int pred[v], dist[v];
+
+	if (this->BFS(s, dest, v, pred, dist) == false) {
+		cout << "Given source and destination"
+			<< " are not connected\n";
+		return {};
+	}
+
+	// vector path stores the shortest path
+	vector<int> path;
+	int crawl = dest;
+	path.push_back(crawl);
+	while (pred[crawl] != -1) {
+		path.push_back(pred[crawl]);
+		crawl = pred[crawl];
+	}
+
+	// distance from source is in distance array
+	cout << "Shortest path length is : "
+		<< dist[dest];
+
+	// printing path from source to destination
+	cout << "\nPath is:\n";
+	for (int i = path.size() - 1; i >= 0; i--)
+		cout << path[i] << " ";
+
+    return path;
 }

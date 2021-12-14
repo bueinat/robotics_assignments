@@ -1,9 +1,11 @@
+#pragma once
+
 #include <Krembot/controller/krembot_controller.h>
 #include <queue>
 #include <map>
 #include <tuple>
 #include "Graph.h"
-#include "Kdtree.h"
+
 
 struct MapMsg
 {
@@ -45,10 +47,9 @@ public:
     void write_grid_with_milestones(std::string filename, int **grid, int height, int width);
     void write_grid_with_robot_location_and_destination_point(std::string filename, int **grid, int height, int width);
     void walk_to_point(CVector2 source, CVector2 destination);
-    void print_float_vector(std::vector<float> const &vec);
     void print_nodes(const KdNodeVector &nodes);
-    int source(std::map<int,std::vector<float>> new_keys_map,std::vector<std::vector<float>>points, int l);
-    int destination(std::map<int,std::vector<float>> new_keys_map, KdNodeVector result,int b);
+    void fill_graph(KdTree *tree, Graph *g, int k);
+    void insert_point_to_graph(CoordPoint point, KdTree *tree, Graph *g, int k, int g_index);
     // from here and on those are methods which were already written
 
     void Init(TConfigurationNode &t_node) override
