@@ -38,16 +38,14 @@ public:
 
     // I added the following methods:
     int is_point_occupied(float x, float y, int **grid);
-    bool is_path_clear(CVector2 x, CVector2 y, int **grid, bool add_origin);
+    bool is_path_clear(CVector2 x, CVector2 y, int **grid);
     void write_grid(std::string filename, int **grid, int height, int width);
     void thickening_grid(int **origGrid, int **newGrid, int height, int width, Real resolution);
-    void generate_random_point(int width, int height, int **grid, std::pair<float, float> &oPair);
-    void fill_milestones_set(std::map<std::pair<float, float>, CVector2> *milestones, KdNodeVector *nodes, std::vector<std::vector<float>> *points,
-                             int height, int width, int nmilestones, int **grid);
+    void generate_random_point(int width, int height, int **grid, std::vector<float> &oPoint);
+    void fill_milestones_set(KdNodeVector *nodes, int height, int width, int nmilestones, int **grid);
     void write_grid_with_milestones(std::string filename, int **grid, int height, int width);
     void write_grid_with_robot_location_and_destination_point(std::string filename, int **grid, int height, int width);
     void walk_to_point(CVector2 source, CVector2 destination);
-    void print_nodes(const KdNodeVector &nodes);
     void fill_graph(KdTree *tree, Graph *g, int k);
     void insert_point_to_graph(CoordPoint point, KdTree *tree, Graph *g, int k, int g_index);
     // from here and on those are methods which were already written
