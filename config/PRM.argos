@@ -15,7 +15,7 @@
     <system threads="0" />
     <experiment length="1260"
                 ticks_per_second="10"
-                random_seed="1" />
+                random_seed="7" />
   </framework>
 
   <!-- *************** -->

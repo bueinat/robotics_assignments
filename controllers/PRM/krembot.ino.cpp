@@ -4,7 +4,7 @@
 #include <algorithm>
 
 // constants initialization
-const int NMILESTONES = 100;
+const int NMILESTONES = 50;
 const int K = 5;
 int moving_time = 1000;
 
@@ -64,7 +64,7 @@ void PRM_controller::setup()
     width = mapMsg.width;
 
     // relative resolution indicates the number of cells which come into one in the coarse grid
-    int relativeResolution = (int)(robotSize / resolution / 4);
+    int relativeResolution = (int)(robotSize / resolution);
 
     // create coarse grid array and fill it with grid values
     coarseGrid = new int *[height]; // row = height
@@ -91,7 +91,8 @@ void PRM_controller::setup()
 
     // create graph with all points, edges are determined by knn
     Graph graph(NMILESTONES + 2);
-    KdTree tree(&nodes);
+    // TODO: try different distance types
+    KdTree tree(&nodes, 2);
     fill_graph(&tree, &graph, K);
 
     // insert start and end points to the tree
@@ -165,10 +166,7 @@ void PRM_controller::fill_graph(KdTree *tree, Graph *g, int k)
             CVector2 start = CVector2(int_to_nodes_map.at(l).at(0), int_to_nodes_map.at(l).at(1));
             CVector2 end = CVector2(result.at(b).point.at(0), result.at(b).point.at(1));
             if (is_path_clear(start, end, coarseGrid))
-            {
                 g->addEdge(l, d);
-                std::cout << start << " -> " << end << std::endl;
-            }
         }
     }
 }
@@ -179,6 +177,11 @@ void PRM_controller::loop()
 
     pos = posMsg.pos;
     degreeX = posMsg.degreeX;
+
+    float x_in_grid = (pos.GetY() - origin.GetY()) / resolution;
+    float y_in_grid = (pos.GetX() - origin.GetX()) / resolution;
+    if (coarseGrid[(int)x_in_grid][(int)y_in_grid] == 1)
+        LOGERR << "current point " << pos << "is occupied" << std::endl;
 
     if (!is_there_path)
         return;
@@ -258,15 +261,12 @@ void PRM_controller::loop()
     }
     case State::whats_next:
     {
-        std::cout << "next point" << std::endl;
-
         if (next_ml == dest)
             state = State::stop;
         else
         {
             next_ml = path.at(next_ml_index++);
             state = State::turn;
-            LOGERR << "next point: " << next_ml << std::endl;
         }
         break;
     }
@@ -426,7 +426,7 @@ void PRM_controller::generate_random_point(int width, int height, int **grid, st
 {
     float x = random_float(origin.GetX(), width * resolution + origin.GetX());
     float y = random_float(origin.GetY(), height * resolution + origin.GetY());
-    while (is_point_occupied(x, y, grid) == 1) // if (x, y) is occupied in the grid, generate new point
+    while (is_point_occupied(y, x, grid) == 1) // if (x, y) is occupied in the grid, generate new point
     {
         x = random_float(origin.GetX(), width * resolution + origin.GetX());
         y = random_float(origin.GetY(), height * resolution + origin.GetY());
