@@ -6,6 +6,7 @@
 // constants initialization
 const int NMILESTONES = 50;
 const int K = 5;
+const int METRICS = 2;
 int moving_time = 1000;
 
 // flags
@@ -64,7 +65,7 @@ void PRM_controller::setup()
     width = mapMsg.width;
 
     // relative resolution indicates the number of cells which come into one in the coarse grid
-    int relativeResolution = (int)(robotSize / resolution);
+    int relativeResolution = (int)(robotSize / resolution); // TODO: maybe you can deivide it by 2 or 4
 
     // create coarse grid array and fill it with grid values
     coarseGrid = new int *[height]; // row = height
@@ -92,7 +93,8 @@ void PRM_controller::setup()
     // create graph with all points, edges are determined by knn
     Graph graph(NMILESTONES + 2);
     // TODO: try different distance types
-    KdTree tree(&nodes, 2);
+    KdTree tree(&nodes, METRICS);
+    // TODO: try different k's
     fill_graph(&tree, &graph, K);
 
     // insert start and end points to the tree
@@ -102,7 +104,7 @@ void PRM_controller::setup()
     int_to_nodes_map.insert({NMILESTONES + 1, end_node.point});
     nodes.push_back(start_node); // starting point
     nodes.push_back(end_node);   // ending point
-    KdTree tree_with_st(&nodes);
+    KdTree tree_with_st(&nodes, METRICS);
     insert_point_to_graph(start_node.point, &tree_with_st, &graph, K, NMILESTONES);
     insert_point_to_graph(end_node.point, &tree_with_st, &graph, K, NMILESTONES + 1);
 
@@ -178,10 +180,14 @@ void PRM_controller::loop()
     pos = posMsg.pos;
     degreeX = posMsg.degreeX;
 
-    float x_in_grid = (pos.GetY() - origin.GetY()) / resolution;
-    float y_in_grid = (pos.GetX() - origin.GetX()) / resolution;
+    float x_in_grid = (pos.GetX() - origin.GetX()) / resolution;
+    float y_in_grid = (pos.GetY() - origin.GetY()) / resolution;
     if (coarseGrid[(int)x_in_grid][(int)y_in_grid] == 1)
         LOGERR << "current point " << pos << "is occupied" << std::endl;
+    if (coarseGrid[(int)y_in_grid][(int)x_in_grid] == 1)
+        LOGERR << "current point " << pos << "is occupied" << std::endl;
+
+    std::cout << "robot in " << pos << ", cell (" << (int)x_in_grid << ", " << (int)y_in_grid << ")" << std::endl;
 
     if (!is_there_path)
         return;
