@@ -23,7 +23,7 @@ int height, width;
 CVector2 pos;
 CDegrees degreeX;
 
-CVector2 dest(-2, -2);
+CVector2 dest(-2, 1);
 CVector2 next_ml;
 int next_ml_index = 1;
 SandTimer sandTimer;
@@ -99,7 +99,7 @@ void PRM_controller::setup()
 
     // insert start and end points to the tree
     KdNode start_node(std::vector<float>({1, 1}));
-    KdNode end_node(std::vector<float>({-2, -2}));
+    KdNode end_node(std::vector<float>({-2, 1}));
     int_to_nodes_map.insert({NMILESTONES, start_node.point});
     int_to_nodes_map.insert({NMILESTONES + 1, end_node.point});
     nodes.push_back(start_node); // starting point
@@ -180,14 +180,14 @@ void PRM_controller::loop()
     pos = posMsg.pos;
     degreeX = posMsg.degreeX;
 
-    float x_in_grid = (pos.GetX() - origin.GetX()) / resolution;
-    float y_in_grid = (pos.GetY() - origin.GetY()) / resolution;
+    float y_in_grid = (pos.GetX() - origin.GetX()) / resolution;
+    float x_in_grid = (pos.GetY() - origin.GetY()) / resolution;
     if (coarseGrid[(int)x_in_grid][(int)y_in_grid] == 1)
         LOGERR << "current point " << pos << "is occupied" << std::endl;
     if (coarseGrid[(int)y_in_grid][(int)x_in_grid] == 1)
         LOGERR << "current point " << pos << "is occupied" << std::endl;
 
-    std::cout << "robot in " << pos << ", cell (" << (int)x_in_grid << ", " << (int)y_in_grid << ")" << std::endl;
+    // std::cout << "robot in " << pos << ", cell (" << (int)x_in_grid << ", " << (int)y_in_grid << ")" << std::endl;
 
     if (!is_there_path)
         return;
