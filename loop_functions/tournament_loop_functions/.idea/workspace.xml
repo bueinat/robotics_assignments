@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated>
+      <config projectName="Project" targetName="tournament_loop_functions" />
+    </generated>
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="5a7149af-aae1-4bf8-822a-b8e11793f7f3" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../../config/tournament/tournament-with-so.argos" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../config/tournament/tournament.argos" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../config/tournament/foraging-collisions.argos" beforeDir="false" afterPath="$PROJECT_DIR$/../../config/tournament/foraging-collisions.argos" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../config/tournament/foraging.argos" beforeDir="false" afterPath="$PROJECT_DIR$/../../config/tournament/foraging.argos" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../controllers/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../controllers/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../controllers/foraging_1/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../controllers/foraging_1/krembot.ino.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../controllers/foraging_1/krembot.ino.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../foraging_loop_functions/foraging_loop_functions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../foraging_loop_functions/foraging_loop_functions.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../foraging_loop_functions/foraging_loop_functions.h" beforeDir="false" afterPath="$PROJECT_DIR$/../foraging_loop_functions/foraging_loop_functions.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tournament_loop_functions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/tournament_loop_functions.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../scores.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../scores.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../test.txt" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="ProjectId" id="1mFWfuj2TirwM3l6YlXHWwI60I8" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="RunManager">
+    <configuration name="tournament_loop_functions" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="tournament_loop_functions" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="5a7149af-aae1-4bf8-822a-b8e11793f7f3" name="Default Changelist" comment="" />
+      <created>1609089925120</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1609089925120</updated>
+      <workItem from="1609089926380" duration="3059000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+</project>

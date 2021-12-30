@@ -1,0 +1,220 @@
+<?xml version="1.0" ?>
+
+<!-- *************************************************** -->
+<!-- * A fully commented XML is diffusion_1.xml. Refer * -->
+<!-- * to it to have full information about what       * -->
+<!-- * these options mean.                             * -->
+<!-- *************************************************** -->
+
+<argos-configuration>
+
+  <!-- ************************* -->
+  <!-- * General configuration * -->
+  <!-- ************************* -->
+  <framework>
+    <system threads="0" />
+    <experiment length="7000"
+                ticks_per_second="10"
+                random_seed="12"/>
+  </framework>
+
+  <!-- *************** -->
+  <!-- * Controllers * -->
+  <!-- *************** -->
+  <controllers>
+
+    <foraging_0_controller id="foraging_0_first"
+                                  library="CHANGE_PATH_ACCORDINGLY">
+      <actuators>
+        <differential_steering implementation="default" />
+  <leds                  implementation="default" medium="leds" />
+      </actuators>
+      <!--
+          The <sensors> section contains a list of the sensors used by
+          this controller.
+          If you forget a to mention a sensor here and then request it in
+          the controller, an error occurs.
+          For a list of the possible sensors, type at the command prompt:
+          $ argos3 -q sensors
+      -->
+      <sensors>
+        <footbot_proximity implementation="default" show_rays="false" />
+        <footbot_light                       implementation="rot_z_only" show_rays="false" />
+  <footbot_imu                       implementation="rpy" />
+        <colored_blob_omnidirectional_camera implementation="rot_z_only" medium="leds" show_rays="false" />
+      </sensors>
+      <!--
+          The <params> section is passed as-is to the controller's Init()
+          function.
+          The user, writing the controller, defines how it is organized.
+          To understand what these parameters are for, check the
+          controller's header file in
+          controllers/locusts-krembot_controller/locusts-krembot_controller.h.
+added 3 parameters: is learning (everyting exept FIX consider as learning - even RANDOM).
+		    fixed coordination method (considered only if isLearning == False
+		    learning method
+in the future can add also TASK
+      -->
+      <params teamID="0"/>
+    </foraging_0_controller>
+
+    <foraging_0_controller id="foraging_0_second"
+
+                                      library="CHANGE PATH -/home/dav/krembot_ws/build/controllers/foraging_0/libforaging_0.so">
+          <actuators>
+            <differential_steering implementation="default" />
+      <leds                  implementation="default" medium="leds" />
+          </actuators>
+          <!--
+              The <sensors> section contains a list of the sensors used by
+              this controller.
+              If you forget a to mention a sensor here and then request it in
+              the controller, an error occurs.
+              For a list of the possible sensors, type at the command prompt:
+              $ argos3 -q sensors
+          -->
+          <sensors>
+            <footbot_proximity implementation="default" show_rays="false" />
+            <footbot_light                       implementation="rot_z_only" show_rays="false" />
+      <footbot_imu                       implementation="rpy" />
+            <colored_blob_omnidirectional_camera implementation="rot_z_only" medium="leds" show_rays="false" />
+          </sensors>
+          <!--
+              The <params> section is passed as-is to the controller's Init()
+              function.
+              The user, writing the controller, defines how it is organized.
+              To understand what these parameters are for, check the
+              controller's header file in
+              controllers/locusts-krembot_controller/locusts-krembot_controller.h.
+    added 3 parameters: is learning (everyting exept FIX consider as learning - even RANDOM).
+    		    fixed coordination method (considered only if isLearning == False
+    		    learning method
+    in the future can add also TASK
+          -->
+          <params teamID="1"/>
+        </foraging_0_controller>
+
+
+  </controllers>
+
+  <!-- ****************** -->
+  <!-- * Loop functions * -->
+  <!-- ****************** -->
+  <loop_functions library="CHANGE PATH -> /home/dav/krembot_ws/build/loop_functions/tournament_loop_functions/libtournament_loop_functions"
+                  label="tournament_loop_functions">
+    <tournament food_radius="0.1"
+              home_radius="0.1"
+              first_id = "0"
+              second_id = "1"
+              first_base = "-1.5,-1.5"
+	      first_color = "green"
+        first_base_color = "cyan"
+              second_base = "1.5,1.5"
+	      second_color = "red"
+        second_base_color = "magenta"
+              number_of_food_bases="10"
+              food_base0 = "0.7,0.7"
+              food_base1 = "0.7,-0.7"
+              halfX="2.9"
+              halfY="2.9"
+              arenaName="easy"/>
+  </loop_functions>
+
+  <!-- *********************** -->
+  <!-- * Arena configuration * -->
+  <!-- *********************** -->
+  <arena size="6, 6, 1" center="0,0,0.5">
+
+    <floor id="floor"
+           source="loop_functions"
+           pixels_per_meter="50" />
+
+    <box id="wall_north" size="6,0.1,0.5" movable="false">
+      <body position="0,3,0" orientation="0,0,0" />
+    </box>
+    <box id="wall_south" size="6,0.1,0.5" movable="false">
+      <body position="0,-3,0" orientation="0,0,0" />
+    </box>
+    <box id="wall_east" size="0.1,6,0.5" movable="false">
+      <body position="3,0,0" orientation="0,0,0" />
+    </box>
+    <box id="wall_west" size="0.1,6,0.5" movable="false">
+      <body position="-3,0,0" orientation="0,0,0" />
+    </box>
+            
+        <light id="light_home_base_0"
+               position="1.5, 1.5, 0"
+               orientation="0,0,0"
+               color="magenta"
+               intensity="5.0"
+               medium="leds" />
+        <light id="light_home_base_1"
+               position="-1.5, -1.5, 0"
+               orientation="0,0,0"
+               color="cyan"
+               intensity="5.0"
+               medium="leds" />
+
+
+    <distribute>
+        <position method="uniform" min="-2.5,-2.5,0" max="2.5,2.5,0" />
+        <orientation method="uniform" min="0,0,0" max="360,0,0" />
+        <entity quantity="2" max_trials="100">
+          <box id="b" size="0.3,0.3,0.5" movable="false" />
+        </entity>
+      </distribute>
+
+    <distribute>
+      <position method="uniform" min="-2,-2,0" max="2,2,0" />
+      <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
+      <entity quantity="5" max_trials="100">
+        <foot-bot id="firstTeam">
+          <controller config="foraging_0_first" />
+        </foot-bot>
+      </entity>
+    </distribute>
+
+    <distribute>
+          <position method="uniform" min="-2,-2,0" max="2,2,0" />
+          <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
+          <entity quantity="5" max_trials="100">
+            <foot-bot id="secondTeam">
+              <controller config="foraging_0_second" />
+            </foot-bot>
+          </entity>
+        </distribute>
+
+  </arena>
+
+  <!-- ******************* -->
+  <!-- * Physics engines * -->
+  <!-- ******************* -->
+  <physics_engines>
+    <dynamics2d id="dyn2d" />
+  </physics_engines>
+
+  <!-- ********* -->
+  <!-- * Media * -->
+  <!-- ********* -->
+<media>
+    <led id="leds" />
+  </media>
+
+  <!-- ****************** -->
+  <!-- * Visualization * -->
+  <!-- ****************** -->
+  <visualization>
+                        <qt-opengl  autoplay="true">
+                          <user_functions library="CHANGE -> /home/dav/krembot_ws/build/loop_functions/tournament_loop_functions/libtournament_loop_functions.so"
+                                                  			label="tournament_qt_user_functions" />
+                        </qt-opengl>
+                      </visualization>
+    <!-- *****<visualization>
+                      <qt-opengl  autoplay="false">
+                      <user_functions library="/home/dav/krembot_ws/build/loop_functions/id_loop_functions/libid_loop_functions.so"
+                              label="id_qtuser_functions" />
+                        <user_functions library="/home/dav/krembot_ws/build/loop_functions/tournament_loop_functions/libtournament_loop_functions.so"
+                        			label="tournament_qt_user_functions" />
+                      </qt-opengl>
+                    </visualization>************* -->
+</argos-configuration>

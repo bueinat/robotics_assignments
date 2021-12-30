@@ -23,7 +23,7 @@ int height, width;
 CVector2 pos;
 CDegrees degreeX;
 
-CVector2 dest(-2, 1);
+CVector2 dest(-2, 2);
 CVector2 next_ml;
 int next_ml_index = 1;
 SandTimer sandTimer;
@@ -88,23 +88,23 @@ void PRM_controller::setup()
 
     // fill milestones with points, and write to file
     PRM_controller::fill_milestones_set(&nodes, height, width, NMILESTONES, coarseGrid);
-    PRM_controller::write_grid_with_milestones("/home/einat/grid_with_ml.txt", coarseGrid, height, width);
+    PRM_controller::write_grid_with_milestones("grid_with_ml.txt", coarseGrid, height, width);
 
     // create graph with all points, edges are determined by knn
     Graph graph(NMILESTONES + 2);
     // TODO: try different distance types
-    KdTree tree(&nodes, METRICS);
+    KdTree tree(&nodes);
     // TODO: try different k's
     fill_graph(&tree, &graph, K);
 
     // insert start and end points to the tree
     KdNode start_node(std::vector<float>({1, 1}));
-    KdNode end_node(std::vector<float>({-2, 1}));
+    KdNode end_node(std::vector<float>({-2, -2}));
     int_to_nodes_map.insert({NMILESTONES, start_node.point});
     int_to_nodes_map.insert({NMILESTONES + 1, end_node.point});
     nodes.push_back(start_node); // starting point
     nodes.push_back(end_node);   // ending point
-    KdTree tree_with_st(&nodes, METRICS);
+    KdTree tree_with_st(&nodes);
     insert_point_to_graph(start_node.point, &tree_with_st, &graph, K, NMILESTONES);
     insert_point_to_graph(end_node.point, &tree_with_st, &graph, K, NMILESTONES + 1);
 
