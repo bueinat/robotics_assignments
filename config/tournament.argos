@@ -24,7 +24,7 @@
   <controllers>
 
     <foraging_0_controller id="foraging_0_first"
-                                  library="CHANGE_PATH_ACCORDINGLY">
+                                  library="/home/einat/robotics/tests/krembot_ws/build/controllers/foraging/libforaging.so">
       <actuators>
         <differential_steering implementation="default" />
   <leds                  implementation="default" medium="leds" />
@@ -60,7 +60,7 @@ in the future can add also TASK
 
     <foraging_0_controller id="foraging_0_second"
 
-                                      library="CHANGE PATH -/home/dav/krembot_ws/build/controllers/foraging_0/libforaging_0.so">
+                                      library="/home/einat/robotics/tests/krembot_ws/build/controllers/foraging_0/libforaging_0.so">
           <actuators>
             <differential_steering implementation="default" />
       <leds                  implementation="default" medium="leds" />
@@ -100,7 +100,7 @@ in the future can add also TASK
   <!-- ****************** -->
   <!-- * Loop functions * -->
   <!-- ****************** -->
-  <loop_functions library="CHANGE PATH -> /home/dav/krembot_ws/build/loop_functions/tournament_loop_functions/libtournament_loop_functions"
+  <loop_functions library="/home/einat/robotics/tests/krembot_ws/build/loop_functions/tournament_loop_functions/libtournament_loop_functions"
                   label="tournament_loop_functions">
     <tournament food_radius="0.1"
               home_radius="0.1"
@@ -205,8 +205,17 @@ in the future can add also TASK
   <!-- ****************** -->
   <visualization>
                         <qt-opengl  autoplay="true">
-                          <user_functions library="CHANGE -> /home/dav/krembot_ws/build/loop_functions/tournament_loop_functions/libtournament_loop_functions.so"
+                          <user_functions library="/home/einat/robotics/tests/krembot_ws/build/loop_functions/tournament_loop_functions/libtournament_loop_functions.so"
                                                   			label="tournament_qt_user_functions" />
+      <camera>
+        <placements>
+          <placement index="1" position="0,0,8.14689" look_at="0,0,0" up="0.707,0,0.707" lens_focal_length="30" />
+          <placement index="0" position="-8.5,0,5" look_at="-7.7,-0.01,4.3" up="0.5,-0.01,0.85" lens_focal_length="40" />
+          <placement index="2" position="0,0,8.14689" look_at="0,1,0" up="1,0,0" lens_focal_length="20" />
+          <placement index="3" position="0,0,8.14689" look_at="1,0,0" up="0,1,0" lens_focal_length="20" />
+          <placement index="4" position="0,0,8.14689" look_at="0,0,0" up="0,0,1" lens_focal_length="20" />
+        </placements>
+      </camera>
                         </qt-opengl>
                       </visualization>
     <!-- *****<visualization>

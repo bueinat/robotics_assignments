@@ -12,4 +12,7 @@ add_subdirectory(simple_test)
 add_subdirectory(ex2)
 add_subdirectory(PRM)
 add_subdirectory(walkingOnGrid)
+add_subdirectory(foraging)
+add_subdirectory(foraging_0)
+add_subdirectory(footbot_foraging)
 

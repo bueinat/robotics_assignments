@@ -281,7 +281,7 @@ CVector2 CTournamentLoopFunctions::randLegalFoodLocation()
 void CTournamentLoopFunctions::PostExperiment() {
     // m_cOutput.open("scores.txt", std::ios_base::trunc | std::ios_base::out);
 //    m_cOutput.open("/home/edenha/krembot_ws/tournament/scores.txt", std::ios_base::trunc | std::ios_base::out);
-    m_cOutput.open("scores.txt", std::ios_base::app | std::ios_base::out);
+    m_cOutput.open("/home/einat/scores.txt", std::ios_base::trunc | std::ios_base::out);
     m_cOutput << "arena\tseed\ttime\tfirst-name\t\tfirst-score\tsecond-name\t\tsecond-score\twinner" << std::endl;
     std::string winner;
     if (first_score == second_score)
