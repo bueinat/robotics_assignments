@@ -2,7 +2,7 @@
 #include "controllers/foraging/krembot.ino.h"
 
 
-class foraging_0_controller : public foraging_controller {
+class foraging_4_controller : public foraging_controller {
 private:
     enum State{
         turn,
@@ -21,4 +21,4 @@ public:
 };
 
 
-REGISTER_CONTROLLER(foraging_0_controller, "foraging_0_controller")
+REGISTER_CONTROLLER(foraging_4_controller, "foraging_4_controller")

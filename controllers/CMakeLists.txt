@@ -14,5 +14,6 @@ add_subdirectory(PRM)
 add_subdirectory(walkingOnGrid)
 add_subdirectory(foraging)
 add_subdirectory(foraging_0)
+add_subdirectory(foraging_4)
 add_subdirectory(footbot_foraging)
 

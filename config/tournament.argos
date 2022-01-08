@@ -23,8 +23,8 @@
   <!-- *************** -->
   <controllers>
 
-    <foraging_0_controller id="foraging_0_first"
-                                  library="/home/einat/robotics/tests/krembot_ws/build/controllers/foraging/libforaging.so">
+    <foraging_0_controller id="foraging_0"
+                                  library="/home/einat/robotics/tests/krembot_ws/build/controllers/foraging_0/libforaging_0.so">
       <actuators>
         <differential_steering implementation="default" />
   <leds                  implementation="default" medium="leds" />
@@ -58,9 +58,9 @@ in the future can add also TASK
       <params teamID="0"/>
     </foraging_0_controller>
 
-    <foraging_0_controller id="foraging_0_second"
+    <foraging_4_controller id="foraging_4"
 
-                                      library="/home/einat/robotics/tests/krembot_ws/build/controllers/foraging_0/libforaging_0.so">
+                                      library="/home/einat/robotics/tests/krembot_ws/build/controllers/foraging_4/libforaging_4.so">
           <actuators>
             <differential_steering implementation="default" />
       <leds                  implementation="default" medium="leds" />
@@ -92,7 +92,7 @@ in the future can add also TASK
     in the future can add also TASK
           -->
           <params teamID="1"/>
-        </foraging_0_controller>
+        </foraging_4_controller>
 
 
   </controllers>
@@ -169,7 +169,7 @@ in the future can add also TASK
       <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
       <entity quantity="5" max_trials="100">
         <foot-bot id="firstTeam">
-          <controller config="foraging_0_first" />
+          <controller config="foraging_0" />
         </foot-bot>
       </entity>
     </distribute>
@@ -179,7 +179,7 @@ in the future can add also TASK
           <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
           <entity quantity="5" max_trials="100">
             <foot-bot id="secondTeam">
-              <controller config="foraging_0_second" />
+              <controller config="foraging_4" />
             </foot-bot>
           </entity>
         </distribute>
